@@ -109,7 +109,7 @@ export default {
             this.blink = !this.blink
         }, 200)
 
-        this.typewriter.data = "Welcome to your account setup!";
+        this.typewriter.data = "Welcome to your GPT4 Unlimited account setup!";
         setTimeout(() => {
             this.typewriter.data = "Please add in some additional information to customize the AI to your needs!";
 

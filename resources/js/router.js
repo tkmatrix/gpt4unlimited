@@ -74,7 +74,7 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
     // Adjust Meta Title Based on Route
-    document.title = 'title' in to.meta && to.meta.title ? to.meta.title+' | AI Unlocked' : 'AI Unlocked'
+    document.title = 'title' in to.meta && to.meta.title ? to.meta.title+' | GPT4 Unlimited' : 'GPT4 Unlimited'
     next()
 })
 
