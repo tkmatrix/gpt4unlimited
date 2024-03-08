@@ -1,15 +1,19 @@
 <template>
-    <div class="w-screen min-h-screen h-fit md:h-screen grid md:overflow-hidden p-8 md:p-24 relative">
-        <!-- Panda Image -->
-        <img id="panda" src="../../../assets/images/pandadown.png" alt="Panda" class="hidden md:block absolute rotate-[105deg] -left-[225px] top-[150px] scale-50">
+    <div class="w-full md:h-screen grid md:grid-cols-3">
+        <!-- Left Side -->
+        <div class="w-full h-[500px] md:h-full grid p-6 md:p-24 bg-custom-dark-blue md:col-span-2">
+            <div class="w-full h-fit grid m-auto">
+                <p class="text-white font-bold text-[32px] select-none">{{ typewriter.value }} <span :class="blink ? 'invisible' : 'visible'">|</span></p>
+            </div>
+        </div>
+        
+        <!-- Right Side -->
+        <div class="w-full h-fit py-32 md:py-0 md:h-full grid bg-sidebar-bg relative">
+            <!-- Logo at the Top -->
+            <div class="w-full h-fit grid justify-items-center top-8 absolute">
+                <img src="../../assets/images/aiLogo.png" alt="AI Logo" class="h-[35px]">
+            </div>
 
-        <!-- Logo at top -->
-        <img src="../../../assets/images/aiLogo.png" alt="AI Logo" class="h-[35px] mx-auto md:mx-0 md:top-8 md:left-1/2 md:absolute">
-
-        <div class="mt-24 md:mt-96 w-full h-fit grid md:gap-6 gap-12 relative mb-12 md:mb-0">
-            <p class="text-[26px] md:text-[32px] text-custom-dark-blue font-medium select-none bg-white md:w-[50%]">{{ typewriter.value }} <span :class="blink ? 'invisible' : 'visible'">|</span></p>
-
-            <!-- Dynamic Fields -->
             <div v-if="show_fields && 'value' in fields[active_field]" class="w-full md:w-[45%] h-fit grid md:mt-8">
                 <p class="text-[18px] md:text-[22px] text-custom-gray/50">{{ fields[active_field].label }}</p>
                 <!-- Upload Button -->
@@ -43,11 +47,11 @@
             
             <!-- Continue Button -->
             <button v-if="show_fields" :disabled="isTyping" @click="next()" class="w-full md:w-fit h-[52px] px-4 text-[18px] md:text-[22px] text-white font-bold bg-custom-dark-blue rounded-[5px] disabled:opacity-50">{{ active_field == fields.length - 1 ? 'Enter Portal' : 'Continue' }}</button>
-        </div>
 
-        <!-- Terms of Use and Privacy Policy at the Bottom -->
-        <div class="w-full h-fit grid justify-items-center select-none bottom-8 absolute">
-            <p class="text-center text-custom-dark-blue font-medium">Terms of Use <span class="mx-4">|</span> Privacy Policy</p>
+            <!-- Terms of Use and Privacy Policy at the Bottom -->
+            <div class="w-full h-fit grid justify-items-center bottom-8 absolute select-none">
+                <p class="text-center text-custom-dark-blue font-medium">Terms of Use <span class="mx-4">|</span> Privacy Policy</p>
+            </div>
         </div>
     </div>
 </template>
@@ -117,7 +121,7 @@ export default {
                 this.show_fields = true;
                 this.active_field = 0;
             }, 7500)
-        }, 3000)
+        }, 4000)
     },
     watch: {
         'typewriter.data': async function(value){
