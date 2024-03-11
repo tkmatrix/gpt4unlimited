@@ -18,12 +18,14 @@ module.exports = {
         'custom-gray': '#4c4c4c',
         'custom-light-blue': '#EFF3F6',
         'custom-light-blue-bg': '#E8F0FE',
-        'custom-dark-blue': '#172340',
+        'custom-dark-blue1': '#172340',
+        'custom-dark-blue2': '#744A6D',
         'custom-orange': '#F59C4A',
         'custom-yellow': '#F5F06E',
         'custom-bg': '#F5F5F5',
         'custom-light': '#DEDEDE',
-        'custom-light-gray': '#939498'
+        'custom-hover-gray': '#ececec',
+        'custom-light-gray': '#F9F9F9'
       },
       boxShadow: {
       'newdrop': 'rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;',

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Helper\ValidateHelper;
 use App\Http\Controllers\Controller;
+use App\Models\pfp_uploads;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -13,8 +14,16 @@ use Illuminate\Support\Facades\Validator;
 class AuthController extends Controller
 {
     // Login session token validity time in minutes
-    private $token_valid_for = 120;
-    private $token_name = 'ai_unlocked';
+    public $token_valid_for = 30;
+    private $token_name = 'gpt4u';
+
+    // Update laravel sanctum vendor file to extend the exipres at time ever time the token is successfully authenticated
+    // Changes made at \vendor\laravel\sanctum\src\Guard.php lines [94, 95, 96] see below
+    // 
+    // // Token valid extend expires at time
+    // $accessToken->expires_at = Carbon::now()->addMinutes((new AuthController)->token_valid_for);
+    // $accessToken->save();
+
 
     /**
      * Check if an email exists in the users table
@@ -47,15 +56,17 @@ class AuthController extends Controller
      *
      * @param string $email account email
      * @param string $password account password
-     * @param boolean $token if credentials are vaid this determines if a token or 200 code is returned
+     * @param boolean $get_token if credentials are vaid this determines if a token or 200 code is returned
      * @return string|integer session token if valid and requested if not requested 200 will be returned; codes 200, 401
      */
-    public static function authenticate(string $email, string $password, bool $token = true){
+    public static function authenticate(string $email, string $password, bool $get_token = true){
         $valid = Auth::attempt(['email'=> strtolower($email), 'password'=> $password]);
         // Create token if requested otherwise return 200
-        $token = $token ? Auth::user()->createToken((new self)->token_name, [], Carbon::now()->addMinutes((new self)->token_valid_for))->plainTextToken : 200;
+        if(!$valid){
+            return 401;
+        }
 
-        return $valid ? $token : 401;
+        return $get_token ? Auth::user()->createToken((new self)->token_name, [], Carbon::now()->addMinutes((new self)->token_valid_for))->plainTextToken : 200;
     }
 
     /**
@@ -66,6 +77,8 @@ class AuthController extends Controller
      */
     public static function return_session_data(Request $request){
         return [
+            "profile_picture"=> $request->user()->pfp ? (pfp_uploads::find($request->user()->pfp))->path : null,
+            "name"=> $request->user()->name,
             "setup_complete"=> $request->user()->setup_complete ? true : false
         ];
     }
@@ -85,7 +98,7 @@ class AuthController extends Controller
             $request->user()->currentAccessToken()->delete();
         }
 
-        return response()->json(["success"=> true, "message"=> "User logged out successfully."], 200);
+        return response()->json(["success"=> true, "message"=> "user logged out successfully."], 200);
     }
 
     /**
@@ -104,8 +117,8 @@ class AuthController extends Controller
             ]
         );
 
-        if($validate->code != 200){
-            return response()->json(["errors"=> $validate->errors], $validate->code);
+        if($validate->code == 400){
+            return $validate->response;
         }
 
         $exists = self::email_exists(strtolower($request->email));
@@ -141,15 +154,11 @@ class AuthController extends Controller
             $check['confirm_password'] = "required|same:password";
         }
 
-        $validate = ValidateHelper::check([
-                ...$request->all(),
-                "type"=> $type
-            ],
-            $check
-        );
+        $data = [...$request->all(), "type"=> $type];
 
-        if($validate->code != 200){
-            return response()->json(["errors"=> $validate->errors], $validate->code);
+        $validate = ValidateHelper::check($data, $check);
+        if($validate->code == 400){
+            return $validate->response;
         }
 
         $response = [
@@ -159,29 +168,30 @@ class AuthController extends Controller
         switch ($type){
             // If Login authenticate the users credentials and return a session token if valid
             case 'login':
-                $type = self::authenticate(strtolower($request->email), $request->password);
+                $token = self::authenticate(strtolower($data['email']), $request['password']);
+                $code = $token == 401 ? 401 : 200;
 
-                if($type == 401){
+                if($token == 401){
                     $response['message'] = "Incorrect password provided.";
                 }else{
                     $response['message'] = "Account logged in successfully.";
-                    $response['token'] = $type;
+                    $response['token'] = $token;
                 }
 
                 break;
             // If Sign up create the users account with the provided information.
             case 'signup':
-                $type = self::create(strtolower($request->email), $request->password);
+                self::create(strtolower($request['email']), $request['password']);
+                $code = 200;
                 $response['message'] = "Account created successfully.";
                 break;
             default: 
                 $type = null;
+                $code = 400;
                 $response['message'] = "An errors occured attempting to authenticate the account.";
                 break;
         }
 
-        return response()->json($response, empty($type) ? 401 : 200);
+        return response()->json($response, $code);
     }
-
-
 }

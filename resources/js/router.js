@@ -78,53 +78,24 @@ router.beforeEach((to, from, next) => {
     next()
 })
 
-// Validate Token API Call
-async function validate_token(token){
-    let data = null;
-
-    await axios.get('/api/auth/validate-token', {
-        "headers": {
-            "Authorization": "Bearer "+token
-        }
-    })
-    .then(response => {
-        data = response;
-    })
-    .catch(error => {
-        data = error.response;
-    })
-
-    return data;
-}
-
 // Validate Session Token for Authenticate Routes
 async function validateAccessToken(to, from, next) {
-    const token = localStorage.getItem("ai_unlocked_token");
-    // Clear token from local storage and redirect to login page
-    async function invalid(){
-        if(token){
-            localStorage.removeItem("ai_unlocked_token")
-        }
-
-        return next({name: "Home"});
-    }
-
-    // Check to make sure the token exists
-    if(!token){ return invalid(); }
-
     // Check if token is valid
-    const response = await validate_token(token)
-    if(response && response.status == 200){
+    const app = window.gpt4u.config.globalProperties;
+    if(await app.$session.valid()){
+        const session = app.$session.get_session();
+
         // Check if the next route requires setup to be complete
         const require_setup = to.meta.require_setup ?? false
         // If setup is required and not completed by the user send them to the Account Setup Page
-        if(require_setup && !response.data.setup_complete){
+        if(require_setup && !session.setup_complete){
             return next({name: "Account Setup"})
         }
 
         return next();
     }else{
-        return invalid(); 
+        app.$session.clear_session()
+        next({name: "Login", query: {then: to.path}})
     }
 }
 

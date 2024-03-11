@@ -13,13 +13,16 @@ use Laravel\Sanctum\HasApiTokens;
 *
 * === Columns ===
  * @property int $id
- * @property string $name
+ * @property string|null $name
  * @property string $email
  * @property \Carbon\Carbon|null $email_verified_at
  * @property string $password
  * @property string|null $remember_token
  * @property \Carbon\Carbon|null $created_at
  * @property \Carbon\Carbon|null $updated_at
+ * @property bool $setup_complete
+ * @property string|null $use_case
+ * @property string|null $pfp
 *
 * === Relationships ===
  * @property-read \Laravel\Sanctum\PersonalAccessToken|null $tokens
@@ -38,6 +41,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'setup_complete',
+        'use_case'
     ];
 
     /**

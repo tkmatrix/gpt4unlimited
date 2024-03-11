@@ -1,47 +1,41 @@
-import axios from 'axios';
+import axios from "axios";
 
 axios.defaults.headers.common = {
-    'X-Requested-With': 'XMLHttpRequest',
-    'X-CSRF-TOKEN': document.head.querySelector('meta[name="csrf-token"]'),
-    'Accept': 'application/json'
-    // 'Authorization': 'Bearer '+localStorage.getItem("rpm_token")
+    "X-Requested-With": "XMLHttpRequest",
+    "X-CSRF-TOKEN": document.head.querySelector('meta[name="csrf-token"]'),
+    Accept: "application/json",
     // 'Access-Control-Allow-Origin': '*',
     // 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS,DELETE,PUT'
 };
 
-axios.interceptors.request.use(
-    config => {
-      config.headers['Authorization'] = `Bearer ${localStorage.getItem('ai_unlocked_token')}`;
-        return config;
-    }
-);
+axios.interceptors.request.use((config) => {
+    config.headers["Authorization"] = `Bearer ${localStorage.getItem( "gpt4u_token" )}`;
+    return config;
+});
 
 axios.interceptors.response.use(
-    response => response,
-    async error => {
+    (response) => response,
+    async (error) => {
+        const app = window.gpt4u.config.globalProperties;
         const status = error.response ? error.response.status : null;
 
         // Ignore auth endpoints
-        if(status == 401 && !error.response.config.url.includes('/api/auth/')){
-            const token = localStorage.getItem("ai_unlocked_token");
+        const fullURL =
+            (error.response.config.baseURL ?? "") + error.response.config.url;
 
-            await axios.get('/api/auth/validate-token', {
-                "headers": {
-                    "Authorization": "Bearer "+token
-                }
-            })
-            .then(response => {
-                
-            })
-            .catch(error => {
-                // Clear token from local storage and redirect to login page
-                if(token){
-                    localStorage.removeItem("ai_unlocked_token")
-                }
+        if (status == 401 && !fullURL.includes("/api/auth/")) {
+            const alert = {
+                deafult_msg: "invalid session, please login again to continue.",
+            };
+            const res = await app.$apiHandler.get("auth/validate", {}, alert);
 
-                // Return to Login / Signup Page
-                return window.location.replace(window.location.protocol+'//'+window.location.host+'/')
-            })
+            if (res.status >= 400) {
+                app.$session.clear_token();
+                return app.$router.push({
+                    name: "Home",
+                    query: { then: app.$route.path },
+                });
+            }
         }
 
         return Promise.reject(error);

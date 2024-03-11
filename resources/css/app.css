@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
 
+html{
+    scroll-behavior: smooth;
+}
+
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -45,5 +49,12 @@ input[type="submit"]{
     border-radius: 5px;
     outline: none;
     cursor: pointer;
+    --tw-ring-color: transparent !important;
+}
+
+textarea, textarea:focus{
+    border: 1px solid rgba(23, 35, 64, 0.3);
+    border-radius: 8px;
+    padding: 10px 55px 10px 10px;
     --tw-ring-color: transparent !important;
 }

@@ -1,9 +1,9 @@
 <template>
     <div class="w-full md:h-screen grid md:grid-cols-3">
         <!-- Left Side -->
-        <div class="w-full h-[500px] md:h-full grid p-6 md:p-24 bg-custom-dark-blue md:col-span-2">
+        <div class="w-full h-[500px] md:h-full grid p-6 md:p-24 bg-gradient-to-r from-custom-dark-blue1 from-25% to-custom-dark-blue2 md:col-span-2">
             <div class="w-full h-fit grid m-auto">
-                <p class="text-white font-bold text-[32px] select-none">{{ typewriter.value }} <span :class="blink ? 'invisible' : 'visible'">|</span></p>
+                <p class="text-white font-bold text-[32px] md:select-none">{{ typewriter.value }} <span :class="blink ? 'invisible' : 'visible'">|</span></p>
             </div>
         </div>
         
@@ -15,17 +15,17 @@
             </div>
 
             <div class="m-auto w-[55%] grid h-fit gap-8">
-                <p class="text-custom-dark-blue text-center font-bold text-[32px] truncate select-none">Get Started</p>
+                <p class="text-custom-dark-blue1 text-center font-bold text-[32px] truncate md:select-none">Get Started</p>
 
                 <div class="w-full h-fit grid grid-cols-2 gap-4">
-                    <button @click="$router.push({name: 'Login'})" class="w-full h-[42px] text-white font-bold text-[18px] rounded-[5px] bg-custom-dark-blue border-[1px] border-custom-dark-blue">Login</button>
-                    <button @click="$router.push({name: 'Login', query: {type: 'signup'}})" class="w-full h-[42px] text-custom-dark-blue font-bold text-[18px] bg-white rounded-[5px] border-[1px] border-custom-dark-blue">Sign up</button>
+                    <button @click="$router.push({name: 'Login'})" class="w-full h-[42px] text-white font-bold text-[18px] rounded-[5px] bg-custom-dark-blue1 border-[1px] border-custom-dark-blue1">Login</button>
+                    <button @click="$router.push({name: 'Login', query: {type: 'signup'}})" class="w-full h-[42px] text-custom-dark-blue1 font-bold text-[18px] bg-white rounded-[5px] border-[1px] border-custom-dark-blue1">Sign up</button>
                 </div>
             </div>
 
             <!-- Terms of Use and Privacy Policy at the Bottom -->
-            <div class="w-full h-fit grid justify-items-center bottom-8 absolute select-none">
-                <p class="text-center text-custom-dark-blue font-medium">Terms of Use <span class="mx-4">|</span> Privacy Policy</p>
+            <div class="w-full h-fit grid justify-items-center bottom-8 absolute md:select-none">
+                <p class="text-center text-custom-dark-blue1 font-medium">Terms of Use <span class="mx-4">|</span> Privacy Policy</p>
             </div>
         </div>
     </div>
