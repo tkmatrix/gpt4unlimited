@@ -34,7 +34,14 @@ export default {
     },
     methods: {
         async save() {
-            console.log(this.name)
+            this.$gloading.start();
+
+            const res = await this.$apiHandler.post('chat/save-session', {name: this.name}, {}, {title: "Save Chat"});
+            this.$gloading.stop();
+            
+            if(res.status == 200){
+                this.$router.replace({name: this.$route.name, params: {chat: res.id}});
+            }
         }
     },
     components: {

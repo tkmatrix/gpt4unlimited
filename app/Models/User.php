@@ -42,7 +42,10 @@ class User extends Authenticatable
         'email',
         'password',
         'setup_complete',
-        'use_case'
+        'use_case',
+        'google_connected',
+        'sub',
+        'pfp'
     ];
 
     /**

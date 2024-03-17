@@ -92,7 +92,7 @@ export default {
 
                 this.typewriter.value = this.typewriter.value+itterate[i];
                 i++;
-            }, 75)
+            }, 50)
         }
     }
 }

@@ -1,7 +1,7 @@
 <template>
     <!-- Save Chat Popup -->
     <saveChat v-if="save_chat" @close="save_chat = false" />
-    <settings v-if="view_settings" @close="view_settings = false" />
+    <settings v-if="view_settings" @close="view_settings = false" @updateSession="session = $session.get()" />
 
     <div class="w-full h-screen md:flex absolute top-0 left-0 text-custom-black">
         <!-- Mobile Header -->
@@ -17,7 +17,7 @@
             </div>
 
             <!-- Save Chat Icon -->
-            <Icon @click="save_chat = true" icon="circum:save-down-2" height="26px" class="right-2 absolute text-custom-gray cursor-pointer" />
+            <Icon v-if="!this.$route.params.chat" @click="save_chat = true" icon="circum:save-down-2" height="26px" class="right-2 absolute text-custom-gray cursor-pointer" />
         </div>
 
         <!-- Chat Side Bar -->
@@ -32,7 +32,7 @@
             <div :class="show_sidebar ? 'w-[300px] p-4 md:p-6' : 'w-[0px] p-0'" class=" h-full bg-custom-light-gray relative overflow-hidden transition-all duration-1000 shadow-2xl">
                 <div class="w-full h-[80%] grid pt-[48px] sidebar-elm visible overflow-x-clip relative">
                     <!-- New Chat Button -->
-                    <button class="w-full h-fit grid items-center px-2 py-[4px] hover:bg-custom-hover-gray rounded-[8px] absolute top-0">
+                    <button @click="$router.replace({name: $route.name, params: {}})" class="w-full h-fit grid items-center px-2 py-[4px] hover:bg-custom-hover-gray rounded-[8px] absolute top-0">
                         <div class="w-fit h-fit flex items-center gap-2 truncate">
                             <div class="w-[28px] h-[28px] grid bg-white rounded-full border-[1px] border-custom-black/10">
                                 <Icon icon="simple-icons:openai" height="18px" class="m-auto text-custom-black" />
@@ -47,13 +47,13 @@
                     <!-- Chats -->
                     <div class="w-full min-h-fit h-fit max-h-full mt-8 grid pr-2 relative overflow-y-auto">
                         <!-- Timeframes -->
-                        <div v-for="(e, i) in ['Today', 'January', '2023']" :class="i == 0 ? '' : 'mt-6'" class="w-full h-fit grid gap-[2px]">
+                        <div v-for="(group, gindex) in Object.keys(session.chats)" :class="gindex == 0 ? '' : 'mt-6'" class="w-full h-fit grid gap-[2px]">
                             <!-- Header -->
-                            <p class="px-2 text-[14px] text-custom-gray opacity-70 pb-2">{{ e }}</p>
+                            <p class="px-2 text-[14px] text-custom-gray opacity-70 pb-2">{{ group }}</p>
 
                             <!-- Chats -->
-                            <button v-for="(w, ii) in 2" class="w-full h-[36px] grid items-center px-2 py-[4px] hover:bg-custom-hover-gray rounded-[8px] relative pr-[36px] group">
-                                <p class="text-[14px] text-left h-fit font-semibold truncate select-none">This is the Chats</p>
+                            <button v-for="(chat, index) in session.chats[group]" @click="$router.push({params: {chat: chat.id}})" :class="$route.params.chat == chat.id ? 'bg-custom-hover-gray' : 'hover:bg-custom-hover-gray'" class="w-full h-[36px] grid items-center px-2 py-[4px] rounded-[8px] relative pr-[36px] group">
+                                <p class="text-[14px] text-left h-fit font-semibold truncate select-none">{{ chat.name }}</p>
 
                                 <!-- Menu Icon -->
                                 <!-- <Icon icon="fe:elipsis-h" height="18px" class="absolute right-2" /> -->
@@ -68,7 +68,7 @@
                     <button class="w-full h-fit grid items-center px-2 py-[4px] hover:bg-custom-hover-gray rounded-[8px] relative">
                         <!-- Account -->
                         <div class="w-fit flex gap-2 items-center truncate">
-                            <!-- Profile Picture -->
+                            <!-- Upgrade -->
                             <div class="min-w-[32px] min-h-[32px] w-[32px] h-[32px] grid bg-white border-[1px] border-custom-black/10 rounded-full overflow-hidden relative ">
                                 <Icon icon="mynaui:sparkles" height="24px" class="text-custom-dark-blue1 m-auto" />
                             </div>
@@ -109,9 +109,7 @@
                         <!-- Account -->
                         <div class="w-fit flex gap-2 items-center truncate account-menu">
                             <!-- Profile Picture -->
-                            <div class="min-w-[32px] min-h-[32px] w-[32px] h-[32px] grid rounded-full overflow-hidden relative account-menu">
-                                <img :src="session.profile_picture" alt="Account Profile Picture" class="m-auto object-cover w-[32px] h-[32px] select-none account-menu">
-                            </div>
+                            <profile_picture :link="session.profile_picture" :add_class="['account-menu']" />
 
                             <!-- Name -->
                             <div class="w-fit grid">
@@ -129,7 +127,7 @@
                 <p class="w-full text-left text-[24px] font-medium">GPT4 Unlimited <span class="opacity-50">v0.1 Beta</span></p>
 
                 <!-- Save Button -->
-                <button @click="save_chat = true;" class="w-[32px] h-[32px] grid bg-white rounded-[4px] border-[1px] border-custom-black/10 right-0 absolute">
+                <button v-if="!this.$route.params.chat" @click="save_chat = true;" class="w-[32px] h-[32px] grid bg-white rounded-[4px] border-[1px] border-custom-black/10 right-0 absolute">
                     <Icon icon="circum:save-down-2" height="24px" class="m-auto text-custom-dark-blue1" />
                 </button>
             </div>
@@ -163,18 +161,20 @@
                         <Icon icon="simple-icons:openai" height="18px" class="m-auto text-white" />
                     </div>
                     <!-- User Profile Picture -->
-                    <div v-else class="min-w-[28px] min-h-[28px] w-[28px] h-[28px] grid rounded-full overflow-hidden relative account-menu">
-                        <img :src="session.profile_picture" alt="Account Profile Picture" class="m-auto object-cover w-[28px] h-[28px] select-none account-menu">
-                    </div>
+                    <profile_picture v-else :link="session.profile_picture" icon_height="18px" height="28px" />
 
                     <div class="w-full h-fit grid gap-1 group">
                         <!-- Name -->
                         <p class="text-[17px] font-bold text-custom-dark-blue1 select-none">{{ message.type == 'prompt' ? session.name : 'GPT4 Unlimited' }}</p>
                         <!-- Text -->
-                        <p class="text-[15px]">{{ message.text }}</p>
+                        <VMarkdownView
+                            mode="light"
+                            :content='message.text'
+                            class="w-full overflow-x-scroll"
+                        ></VMarkdownView>
 
                         <!-- Message Actions -->
-                        <div class="w-fit h-fit flex itmes-center gap-4 invisible group-hover:visible">
+                        <div class="w-fit h-fit flex itmes-center gap-4 invisible group-hover:visible mt-2">
                             <!-- Copy to clipboard -->
                             <Icon @click="copy(message.text)" icon="iconoir:paste-clipboard" height="16px" class="m-auto hover:text-custom-dark-blue1 text-custom-gray/50 cursor-pointer" />
                         </div>
@@ -195,12 +195,19 @@
 
                 <!-- Prompt Input -->
                 <div class="w-full h-fit mt-8 relative">
-                    <textarea v-model="prompt" id="prompt-input" @keydown="handleKey" @input="adjust_input()" style="height: 48px; min-height: 48px !important; max-height: 250px" class="resize-none w-full" placeholder="Message GPT4 Unlimited..."></textarea>
+                    <VMarkdownEditor
+                        @keydown="handleKey" @input="adjust_input()"
+                        v-model="prompt"
+                        locale="en"
+                        :upload-action="send"
+                    />
 
                     <!-- Send Button -->
-                    <button @click="send" :disabled="!prompt" class="w-[30px] h-[30px] bg-custom-dark-blue2 disabled:opacity-50 rounded-[4px] absolute bottom-4 right-4">
-                        <Icon icon="mynaui:arrow-up" height="24px" class="m-auto text-white" />
-                    </button>
+                    <div class="w-fit h-[52px] grid items-center absolute bottom-0 right-4">
+                        <button @click="send" :disabled="!prompt" class="w-[30px] h-[30px] bg-custom-dark-blue2 disabled:opacity-50 rounded-[4px]">
+                            <Icon icon="mynaui:arrow-up" height="24px" class="m-auto text-white" />
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -215,19 +222,22 @@
 <script>
 import { Icon } from '@iconify/vue';
 
+import profile_picture from '../../components/profile_picture.vue'
 import saveChat from '../../components/popups/saveChat.vue'
 import settings from '../../components/popups/settings.vue'
+import { VMarkdownView, VMarkdownEditor } from 'vue3-markdown'
+import 'vue3-markdown/dist/style.css'
 
 export default {
     name: "Dashboard",
     data(){
         return{
-            session: this.$session.get_session(),
+            session: this.$session.get(),
             
             show_sidebar: true,
             account_menu: false,
 
-            chats: [],
+            // chats: [],
             chat: null,
             messages: [],
 
@@ -235,16 +245,27 @@ export default {
             show_typing: false,
 
             save_chat: false,
-            view_settings: false
+            view_settings: false,
+            markdownContent: "I just love **bold text**. Italicized text is the _cat's meow_. At the command prompt, type `nano`."
         }
     },
     async mounted(){
+        this.adjust_input()
         // Event Listener to close the menu on clicks
         document.addEventListener("click", (e) => {
             if(this.account_menu && !e.target.classList.contains('account-menu')){
                 this.account_menu = false;
             }
         })
+
+        const chat = this.$route.params.chat;
+        const res = await this.$apiHandler.get('chat/get/'+(chat ? chat : 'session'))
+
+        // route had a chat id that the user cannot access clear it and get the session chat
+        if(chat && res.status >= 400){
+            this.$router.replace({name: this.$route.name, params: {}});
+            const res = await this.$apiHandler.get('chat/get/session');
+        }
 
         this.scrollToBottom()
     },
@@ -265,12 +286,17 @@ export default {
     },
     methods: {
         async logout(){
-            const res = await this.$apiHandler.get('auth/logout')
-            this.$session.clear_session();
+            this.$gloading.start();
+
+            const res = await this.$apiHandler.get('auth/logout/all')
+            this.$session.clear();
+
+            this.$gloading.stop();
             this.$router.push({name: "Login"})
         },
-        adjust_input(e){
-            let input = document.getElementById('prompt-input');
+        adjust_input(){
+            let input = document.getElementsByClassName('vmd-body')[0].children[0];
+
             input.style.height = '1px';
             input.style.height = input.scrollHeight+'px';
         },
@@ -297,11 +323,25 @@ export default {
             })
         },
         async send(){
+            // check to make sure a prompt is entered
+            if(!this.prompt || !this.prompt.trim()){
+                this.$notification.add({
+                    title: "Validation Error",
+                    text: "please add a prompt to proceed.",
+                    type: "warn"
+                });
+                
+                return;
+            }
             this.$gloading.start();
+
             this.messages.push({type: 'prompt', text: this.prompt})
             this.scrollToBottom()
 
             this.prompt = "";
+            let input = document.getElementsByClassName('vmd-body')[0].children[0];
+            input.style.height = '50px';
+            
             this.show_typing = true;
             setTimeout(() => {
                 this.show_typing = false;
@@ -315,8 +355,11 @@ export default {
     },
     components: {
         Icon,
+        profile_picture,
         saveChat,
-        settings
+        settings,
+        VMarkdownView,
+        VMarkdownEditor
     }
 }
 

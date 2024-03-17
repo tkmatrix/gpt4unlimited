@@ -7,9 +7,18 @@ use App\Http\Controllers\Controller;
 use App\Models\pfp_uploads;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
+    private static function update_user(string $user_id, array $data){
+        $user = User::find($user_id);
+        $user->fill($data);
+        $user->save();
+
+        return;
+    }
+
     /**
      * Complete a users account setup
      *
@@ -28,9 +37,7 @@ class UserController extends Controller
         }
 
         $data["setup_complete"] = true; 
-        $user = User::find($request->user()->id);
-        $user->fill($data);
-        $user->save();
+        self::update_user($request->user()->id, $data);
 
         return response()->json(["message"=> "account setup completed successfully."], 200);
     }
@@ -48,10 +55,15 @@ class UserController extends Controller
             return response()->json(['message'=> 'profile picture upload not found.'], 400);
         }
 
+        $name = Str::random(8).$file->getClientOriginalExtension();
+        while(pfp_uploads::where('path', 'profile_picture/'.$name)->exists()){
+            $name = Str::random(8).$file->getClientOriginalExtension();
+        }
+        
         $file_entry = [
             "user"=> $request->user()->id,
             // save the profile picture file
-            "path"=> $request->file('profile_picture')->storeAs('profile_picture', $file->getClientOriginalName(), 'public')
+            "path"=> $request->file('profile_picture')->storeAs('profile_picture', $name, 'public')
         ];
 
         // create a database entry
@@ -63,5 +75,51 @@ class UserController extends Controller
         $user->save();
 
         return response()->json(["message"=> "account profile picture updated successfully."], 200); 
+    }
+
+    /**
+     * Update a users email address
+     *
+     * @param Request $request
+     * @return object{message: string}
+     */
+    public function update_email(Request $request){
+        $data = $request->all();
+        $validate = ValidateHelper::check($data, [
+            "email"=> "required|email"
+        ]);
+
+        if($validate->code == 400){
+            return $validate->response;
+        }
+
+        $user = User::find($request->user()->id);
+        $user->email = strtolower($request->email);
+        $user->save();
+
+        return response()->json(["message"=> "account email address updated successfully."], 200); 
+    }
+    
+    /**
+     * Update a users password
+     *
+     * @param Request $request
+     * @return object{message: string}
+     */
+    public function update_password(Request $request){
+        $data = $request->all();
+        $validate = ValidateHelper::check($data, [
+            "password"=> "required|min:8"
+        ]);
+
+        if($validate->code == 400){
+            return $validate->response;
+        }
+
+        $user = User::find($request->user()->id);
+        $user->password = bcrypt($request->password);
+        $user->save();
+
+        return response()->json(["message"=> "account password updated successfully."], 200); 
     }
 }

@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Helper\GoogleAuthHelper;
 use App\Helper\ValidateHelper;
+use App\Http\Controllers\Chat\ChatsController;
 use App\Http\Controllers\Controller;
+use App\Models\chats;
 use App\Models\pfp_uploads;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
@@ -40,9 +44,10 @@ class AuthController extends Controller
      * @param string $email
      * @param string $password
      * @param string|null $name
+     * @param boolean $google_connected
      * @return integer created user's id
      */
-    public static function create(string $email, string $password, string $name = null){
+    public static function create(string $email, string $password, string $name = null, bool $google_connected = false){
         $input = get_defined_vars();
         $input['email'] = strtolower($email);
         $input['password'] = bcrypt($password);
@@ -79,7 +84,10 @@ class AuthController extends Controller
         return [
             "profile_picture"=> $request->user()->pfp ? (pfp_uploads::find($request->user()->pfp))->path : null,
             "name"=> $request->user()->name,
-            "setup_complete"=> $request->user()->setup_complete ? true : false
+            "email"=> $request->user()->email,
+            "google_connected"=> $request->user()->google_connected,
+            "setup_complete"=> $request->user()->setup_complete ? true : false,
+            "chats"=> ChatsController::chats($request->user()->id),
         ];
     }
 
@@ -91,6 +99,10 @@ class AuthController extends Controller
      * @return object{success: boolean, message: string}
      */
     public function logout(Request $request, $all = ""){
+
+        // clear session chat
+        chats::where('session', $request->bearerToken())->delete();
+        // $session_chats->save();
 
         if($all == 'all'){
             $request->user()->tokens()->delete();
@@ -193,5 +205,57 @@ class AuthController extends Controller
         }
 
         return response()->json($response, $code);
+    }
+
+    /**
+     * Authenticate a google user login
+     *
+     * @param Request $request
+     * @return object{success: boolean, token: string}
+     */
+    public function google(Request $request){
+        // google auth code
+        $code = $request->header('google-code', null);
+        if(empty($code)){
+            return response()->json(["message"=> "Invalid auth code"], 401);
+        }
+
+        // get access token from the users auth code
+        $access_token = GoogleAuthHelper::get_access_token($code);
+        // get the user info using the access token
+        $profile = GoogleAuthHelper::get_user_info($access_token);
+
+        // check if the user account exists
+        $exists = self::email_exists(strtolower($profile->email));
+        // create an account if the user does not exist
+        if(!$exists){
+            $temp_password = Str::random(16);
+
+            $user_data = [
+                ...(array) $profile,
+                // generate a random password for the account
+                "password"=> bcrypt($temp_password),
+                "google_connected"=> true
+            ];
+
+            $user_data['email'] = strtolower($user_data['email']);
+            User::create($user_data);
+        }
+
+        // authenticate the account and create an access token
+        $user = User::where('email', strtolower($profile->email))->first();
+        if(!$user->google_connected){
+            $user->google_connected = true;
+            $user->sub = $profile->sub;
+            
+            $user->save();
+        }
+
+        $response = [
+            "message"=> "Account logged in successfully.",
+            "token"=> $user->createToken((new self)->token_name, [], Carbon::now()->addMinutes((new self)->token_valid_for))->plainTextToken
+        ];
+
+        return response()->json($response, 200);
     }
 }

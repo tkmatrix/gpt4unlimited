@@ -54,7 +54,7 @@ const routes = [
                 children: [
                     // Dashboard
                     {
-                        path: 'dashboard',
+                        path: 'dashboard/:chat?',
                         name: "Dashboard",
                         component: Dashboard,
                         meta: {
@@ -83,7 +83,7 @@ async function validateAccessToken(to, from, next) {
     // Check if token is valid
     const app = window.gpt4u.config.globalProperties;
     if(await app.$session.valid()){
-        const session = app.$session.get_session();
+        const session = app.$session.get();
 
         // Check if the next route requires setup to be complete
         const require_setup = to.meta.require_setup ?? false
@@ -94,7 +94,7 @@ async function validateAccessToken(to, from, next) {
 
         return next();
     }else{
-        app.$session.clear_session()
+        app.$session.clear()
         next({name: "Login", query: {then: to.path}})
     }
 }

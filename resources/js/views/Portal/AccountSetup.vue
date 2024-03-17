@@ -68,6 +68,7 @@ export default {
     data(){
         return{
             blink: false,
+            session: this.$session.get(),
             typewriter: {
                 value: "",
                 data: "",
@@ -111,6 +112,9 @@ export default {
         }
     },
     mounted(){
+        if(this.session.name){
+            this.fields[0].value = this.session.name
+        }
         // Continues Blink
         setInterval(() => {
             this.blink = !this.blink

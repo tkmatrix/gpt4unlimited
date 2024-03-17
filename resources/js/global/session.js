@@ -14,17 +14,17 @@ const session = {
                 localStorage.removeItem('gpt4u_token')
                 return;
             },
-            get_session: function(){
+            get: function(){
                 return JSON.parse(localStorage.getItem('gpt4u_session'));
             },
-            set_session: function(data){
+            set: function(data){
                 if('profile_picture' in data){
-                    data.profile_picture = window.location.protocol+'//'+window.location.host+'/storage/'+data.profile_picture
+                    data.profile_picture = data.profile_picture ? window.location.protocol+'//'+window.location.host+'/storage/'+data.profile_picture : null
                 }
 
                 return localStorage.setItem('gpt4u_session', JSON.stringify(data));
             },
-            clear_session: function(data){
+            clear: function(data){
                 localStorage.removeItem('gpt4u_session');
                 localStorage.removeItem('gpt4u_token');
                 return;
@@ -32,7 +32,7 @@ const session = {
             valid: async function(){
                 const res = await app.config.globalProperties.$apiHandler.get('auth/validate')
                 if(res.status == 200){
-                    this.set_session(res.data);
+                    this.set(res.data);
                     return true;
                 }
 

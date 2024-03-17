@@ -12,8 +12,9 @@
             <hr>
 
             <!-- Settings Menu -->
-            <div class="w-full p-4 grid md:flex items-center gap-4 relative">
-                <div class="w-[180px] h-fit grid gap-1">
+            <div class="w-full p-4 grid md:flex gap-4 relative">
+                <!-- left side menu -->
+                <div class="w-full md:w-[180px] min-w-[180px] h-fit grid gap-1 mb-12 md:mb-0">
                     <button v-for="(item, index) in settings" @click="type = item.code" :class="type == item.code ? 'bg-custom-hover-gray' : ''" class="w-full h-fit flex items-center gap-2 px-2 py-[6px] rounded-[6px] truncate">
                         <div class="h-[18px] w-[18px] min-h-[18px] min-w-[18px]">
                             <Icon :icon="item.icon" height="18px" class="text-custom-black" />
@@ -21,13 +22,20 @@
                         <p class="select-none truncate">{{ item.name }}</p>
                     </button>
                 </div>
+
+                <!-- settings component -->
+                <component :is="(type)" @updateSession="$emit('updateSession')" />
             </div>
         </div>
     </div>
 </template>
 
 <script>
+
 import { Icon } from '@iconify/vue';
+// settings
+import account from './settings/account.vue'
+import usage from './settings/usage.vue'
 
 export default {
     name: "Popups - Settings",
@@ -48,11 +56,11 @@ export default {
             ]
         }
     },
-    methods: {
-
-    },
     components: {
-        Icon
+        Icon,
+        // settings
+        account,
+        usage
     }
 }
 

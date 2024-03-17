@@ -19,7 +19,10 @@
         "@vitejs/plugin-vue": "^5.0.4",
         "animate.css": "^4.1.1",
         "vue": "^3.4.21",
+        "vue-google-oauth2": "^1.5.10",
         "vue-loader": "^17.3.1",
-        "vue-router": "^4.3.0"
+        "vue-router": "^4.3.0",
+        "vue3-google-login": "^2.0.26",
+        "vue3-markdown": "^1.1.9"
     }
 }

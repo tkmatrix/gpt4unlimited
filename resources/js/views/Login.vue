@@ -45,7 +45,7 @@
             </div>
 
             <!-- Continue With Google -->
-            <button type="button" class="w-full h-[52px] grid items-center px-4 border-[1px] border-custom-black/10 rounded-[5px] md:select-none">
+            <button @click="googleLogin" type="button" class="w-full h-[52px] grid items-center px-4 border-[1px] border-custom-black/10 rounded-[5px] md:select-none">
                 <div class="w-fit h-fit flex items-center gap-4">
                     <img src="../../assets/images/google.png" alt="Google" style="height: 24px;">
                     <p>Continue with Google</p>
@@ -63,6 +63,7 @@
 <script>
 
 import { Icon } from '@iconify/vue';
+import { googleSdkLoaded } from "vue3-google-login";
 
 export default{
     name: "Login",
@@ -155,16 +156,23 @@ export default{
         }
     },
     methods: {
-        async check(){
+        async check(google = false, code = null){
             this.$gloading.start()
             const alert = {
                 title: this.type == 'login' ? "Login" : "Signup",
             }
 
+            let res = {};
+            // google login
+            if(google){
+                res = await this.$apiHandler.get('auth/google', { 'google-code': code }, alert);
+            }
             // check request
-            const res = await this.$apiHandler.post('auth/check/'+this.type, this.form, {}, alert);
+            else{
+                res = await this.$apiHandler.post('auth/check/'+this.type, this.form, {}, alert);
+            }
 
-            if(res.status == 200){
+            if('status' in res && res.status == 200){
                 if(this.type == 'login'){
                     // save session token and push to dashboard
                     this.$session.set_token(res.data.token);
@@ -180,7 +188,22 @@ export default{
             }else{
                 this.$gloading.stop()
             }
-        }
+        },
+        googleLogin() {
+            googleSdkLoaded(google => {
+                google.accounts.oauth2
+                .initCodeClient({
+                    client_id: "378375592211-00ka3oj7iuj1hjpvgbrec0lssp7h6cds.apps.googleusercontent.com",
+                    scope: "email profile openid",
+                    callback: async (response) => {
+                        if('code' in response){
+                            await this.check(true, response.code)
+                        }
+                    }
+                })
+                .requestCode();
+            });
+        },
     },
     components: {
         Icon
