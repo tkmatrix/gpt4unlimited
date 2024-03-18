@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Chat\ChatsController;
+use App\Http\Controllers\Messages\MessagesController;
 use App\Http\Controllers\User\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -51,4 +52,6 @@ Route::middleware('auth:sanctum')->prefix('/account')->group(function() {
 Route::middleware('auth:sanctum')->prefix('/chat')->group(function() {
     Route::get('get/{id}', [ChatsController::class, 'get']);
     Route::post('save-session', [ChatsController::class, 'save_session_chat']);
+
+    Route::post('new-prompt/{chat_id}', [MessagesController::class, 'new_prompt']);
 });

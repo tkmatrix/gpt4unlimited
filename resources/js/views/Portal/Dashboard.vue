@@ -1,6 +1,7 @@
 <template>
-    <!-- Save Chat Popup -->
-    <saveChat v-if="save_chat" @close="save_chat = false" />
+    <!-- Save Chat Popup - reload chats on session update -->
+    <saveChat v-if="save_chat" @close="save_chat = false" @updateSession="session = $session.get(); view_chats = false; view_chats = true;" />
+    <!-- Settings Popup -->
     <settings v-if="view_settings" @close="view_settings = false" @updateSession="session = $session.get()" />
 
     <div class="w-full h-screen md:flex absolute top-0 left-0 text-custom-black">
@@ -45,7 +46,7 @@
                     </button>
 
                     <!-- Chats -->
-                    <div class="w-full min-h-fit h-fit max-h-full mt-8 grid pr-2 relative overflow-y-auto">
+                    <div v-if="view_chats" class="w-full min-h-fit h-fit max-h-full mt-8 grid pr-2 relative overflow-y-auto">
                         <!-- Timeframes -->
                         <div v-for="(group, gindex) in Object.keys(session.chats)" :class="gindex == 0 ? '' : 'mt-6'" class="w-full h-fit grid gap-[2px]">
                             <!-- Header -->
@@ -157,7 +158,7 @@
                 <!-- Messages -->
                 <div v-for="(message, index) in messages" class="w-full h-fit flex gap-4">
                     <!-- AI Icon -->
-                    <div v-if="message.type == 'response'" class="min-w-[28px] min-h-[28px] w-[28px] h-[28px] grid bg-custom-dark-blue2 rounded-full select-none">
+                    <div v-if="message.role == 'assistant'" class="min-w-[28px] min-h-[28px] w-[28px] h-[28px] grid bg-custom-dark-blue2 rounded-full select-none">
                         <Icon icon="simple-icons:openai" height="18px" class="m-auto text-white" />
                     </div>
                     <!-- User Profile Picture -->
@@ -165,18 +166,18 @@
 
                     <div class="w-full h-fit grid gap-1 group">
                         <!-- Name -->
-                        <p class="text-[17px] font-bold text-custom-dark-blue1 select-none">{{ message.type == 'prompt' ? session.name : 'GPT4 Unlimited' }}</p>
+                        <p class="text-[17px] font-bold text-custom-dark-blue1 select-none">{{ message.role == 'user' ? session.name : 'GPT4 Unlimited' }}</p>
                         <!-- Text -->
                         <VMarkdownView
                             mode="light"
-                            :content='message.text'
+                            :content='message.content'
                             class="w-full overflow-x-scroll"
                         ></VMarkdownView>
 
                         <!-- Message Actions -->
                         <div class="w-fit h-fit flex itmes-center gap-4 invisible group-hover:visible mt-2">
                             <!-- Copy to clipboard -->
-                            <Icon @click="copy(message.text)" icon="iconoir:paste-clipboard" height="16px" class="m-auto hover:text-custom-dark-blue1 text-custom-gray/50 cursor-pointer" />
+                            <Icon @click="copy(message.content)" icon="iconoir:paste-clipboard" height="16px" class="m-auto hover:text-custom-dark-blue1 text-custom-gray/50 cursor-pointer" />
                         </div>
                     </div>
                 </div>
@@ -234,6 +235,8 @@ export default {
         return{
             session: this.$session.get(),
             
+            view_chats: true,
+
             show_sidebar: true,
             account_menu: false,
 
@@ -245,8 +248,7 @@ export default {
             show_typing: false,
 
             save_chat: false,
-            view_settings: false,
-            markdownContent: "I just love **bold text**. Italicized text is the _cat's meow_. At the command prompt, type `nano`."
+            view_settings: false
         }
     },
     async mounted(){
@@ -259,14 +261,8 @@ export default {
         })
 
         const chat = this.$route.params.chat;
-        const res = await this.$apiHandler.get('chat/get/'+(chat ? chat : 'session'))
-
-        // route had a chat id that the user cannot access clear it and get the session chat
-        if(chat && res.status >= 400){
-            this.$router.replace({name: this.$route.name, params: {}});
-            const res = await this.$apiHandler.get('chat/get/session');
-        }
-
+        await this.getChat(chat ? chat : 'session')
+        
         this.scrollToBottom()
     },
     watch:{
@@ -282,6 +278,9 @@ export default {
                     elms[i].classList.replace('visible', 'invisible')
                 }
             }
+        },
+        '$route.params.chat': async function (value){
+            await this.getChat(value ? value : 'session')
         }
     },
     methods: {
@@ -322,6 +321,20 @@ export default {
                 type: "success"
             })
         },
+        async getChat(chat = 'session'){
+            this.$gloading.start();
+
+            const res = await this.$apiHandler.get('chat/get/'+chat)
+            // route had a chat id that the user cannot access clear it and get the session chat
+            if(chat != 'session' && res.status >= 400){
+                this.$router.replace({name: this.$route.name, params: {}});
+            }else if(res.status == 200){
+                this.messages = res.data.chat.messages
+                this.scrollToBottom()
+            }
+
+            this.$gloading.stop();
+        },
         async send(){
             // check to make sure a prompt is entered
             if(!this.prompt || !this.prompt.trim()){
@@ -335,7 +348,8 @@ export default {
             }
             this.$gloading.start();
 
-            this.messages.push({type: 'prompt', text: this.prompt})
+            const prompt = this.prompt;
+            this.messages.push({role: 'user', content: prompt})
             this.scrollToBottom()
 
             this.prompt = "";
@@ -343,12 +357,14 @@ export default {
             input.style.height = '50px';
             
             this.show_typing = true;
-            setTimeout(() => {
-                this.show_typing = false;
-                this.messages.push({type: 'response', text: 'Here is my ai response to the question.'})
-                this.scrollToBottom()
-            }, 2000);
+            const request_alert = {title: "GPT4 Unlimited"}
 
+            const res = await this.$apiHandler.post('chat/new-prompt/'+(this.$route.params.chat ? this.$route.params.chat : 'session'), {prompt: prompt}, {}, request_alert)
+            if(res.status == 200){
+                this.show_typing = false;
+                this.messages.push(res.data.assistant_response)
+                this.scrollToBottom()
+            }
             
             this.$gloading.stop();
         }

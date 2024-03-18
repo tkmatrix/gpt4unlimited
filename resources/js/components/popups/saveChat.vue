@@ -40,7 +40,8 @@ export default {
             this.$gloading.stop();
             
             if(res.status == 200){
-                this.$router.replace({name: this.$route.name, params: {chat: res.id}});
+                this.$router.replace({name: this.$route.name, params: {chat: res.data.id}});
+                location.replace('/a/portal/dashboard/'+res.data.id)
             }
         }
     },

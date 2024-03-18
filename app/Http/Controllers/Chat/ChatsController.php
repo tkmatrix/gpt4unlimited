@@ -88,10 +88,16 @@ class ChatsController extends Controller
         }
 
         // get chat messages and return them
-        $chat->messages = messages::where('chat', $chat->id)->orderBy('updated_at', 'desc')->get();
+        $chat->messages = messages::where('chat', $chat->id)->orderBy('created_at', 'asc')->get(["role", "content", "created_at"]);
         return response()->json(["chat"=> $chat], 200);
     }
 
+    /**
+     * Save a users session chat
+     *
+     * @param Request $request
+     * @return object{message: string, id: integer}
+     */
     public function save_session_chat(Request $request){
         $data = $request->all();
         $validate = ValidateHelper::check($data, [
