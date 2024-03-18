@@ -7,6 +7,7 @@ use App\Helper\ValidateHelper;
 use App\Http\Controllers\Controller;
 use App\Models\chats;
 use App\Models\messages;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class MessagesController extends Controller
@@ -51,6 +52,9 @@ class MessagesController extends Controller
         // send the request to open ai
         // save the response to the messages table
         $assistant_response = OpenAiHelper::chat_completion($chat->id, $chat->model, $message_id);
+
+        $chat->updated_at = Carbon::now();
+        $chat->save();
 
         // send the reponse back to the user
         return response()->json([
