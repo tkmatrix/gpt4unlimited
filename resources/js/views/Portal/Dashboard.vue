@@ -127,9 +127,6 @@
             <!-- desktop header - hidden on mobile -->
             <div class="w-full h-fit hidden md:grid items-center relative">
                 <div class="w-fit h-fit flex items-center gap-6 text-[24px]">
-                    <p class="w-full text-left font-medium">GPT4 Unlimited <span class="opacity-50">v0.1 Beta</span></p>
-                    <p>-</p>
-
                     <!-- chat name -->
                     <div v-if="chat">
                         <!-- update name form -->
@@ -152,6 +149,7 @@
                             <Icon icon="jam:write" height="20px" class="text-custom-black" />
                         </button>
                     </div>
+                    <p v-else class="w-full text-left font-medium">GPT4 Unlimited <span class="opacity-50">v0.1 Beta</span></p>
                 </div>
 
                 <!-- Save Button -->
