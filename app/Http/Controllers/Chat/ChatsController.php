@@ -12,7 +12,7 @@ use PDO;
 
 class ChatsController extends Controller
 {
-    private static $default_model = "gpt-3.5-turbo";
+    private static $default_model = "gpt-4-turbo-preview";
 
     /**
      * Get all recent chats associated with a user

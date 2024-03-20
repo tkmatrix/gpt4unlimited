@@ -1,4 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+@import 'md-editor-v3/lib/style.css';
+@import 'md-editor-v3/lib/preview.css';
 
 html{
     scroll-behavior: smooth;
@@ -12,7 +14,7 @@ html{
 ::-webkit-scrollbar-track {
     border-radius: 100vh;
     /* background: rgb(241, 240, 240); */
-    background: transparent;
+    background: rgba(197, 196, 196, .1);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -59,19 +61,28 @@ textarea, textarea:focus{
     --tw-ring-color: transparent !important;
 }
 
-/* Markdown Editor */
-.vmd-toolbar{
+/* Markdow Editor */
+#preview-only-preview-wrapper{
+    padding: 0 !important;
+}
+.md-editor-preview-wrapper {
+    padding: 0 !important;
+}
+
+.md-editor-toolbar-wrapper{
     display: none;
 }
-
-.vmd-body{
-    border: 1px solid rgba(23, 35, 64, 0.3);
-    border-radius: 8px;
+.md-editor-footer{
+    display: none !important;
 }
 
-.vmd-body textarea{
-    max-height: 250px;
-    min-height: 48px;
-    height: 48px;
+.md-editor-preview{
+    word-break: keep-all !important;
+}
+
+#prompt-input{
+    border: 1px solid rgba(23, 35, 64, 0.1);
+    border-radius: 8px;
     font-family: Nunito, sans-serif !important;
+    word-break: keep-all !important;
 }

@@ -52,6 +52,9 @@ class MessagesController extends Controller
         // send the request to open ai
         // save the response to the messages table
         $assistant_response = OpenAiHelper::chat_completion($chat->id, $chat->model, $message_id);
+        if($assistant_response == null){
+            return response()->json(["message"=> "an erro occured attempting to generate the response, please try again."], 430);
+        }
 
         $chat->updated_at = Carbon::now();
         $chat->save();

@@ -168,14 +168,10 @@
                         <!-- Name -->
                         <p class="text-[17px] font-bold text-custom-dark-blue1 select-none">{{ message.role == 'user' ? session.name : 'GPT4 Unlimited' }}</p>
                         <!-- Text -->
-                        <VMarkdownView
-                            mode="light"
-                            :content='message.content'
-                            class="w-full overflow-x-scroll"
-                        ></VMarkdownView>
+                        <MdPreview :modelValue="message.content" language="en-US" />
 
                         <!-- Message Actions -->
-                        <div class="w-fit h-fit flex itmes-center gap-4 invisible group-hover:visible mt-2">
+                        <div class="w-fit h-fit flex itmes-center gap-4 invisible group-hover:visible">
                             <!-- Copy to clipboard -->
                             <Icon @click="copy(message.content)" icon="iconoir:paste-clipboard" height="16px" class="m-auto hover:text-custom-dark-blue1 text-custom-gray/50 cursor-pointer" />
                         </div>
@@ -196,12 +192,7 @@
 
                 <!-- Prompt Input -->
                 <div class="w-full h-fit mt-8 relative">
-                    <VMarkdownEditor
-                        @keydown="handleKey" @input="adjust_input()"
-                        v-model="prompt"
-                        locale="en"
-                        :upload-action="send"
-                    />
+                    <MdEditor v-model="prompt" @keydown="handleKey" :preview="false" language="en-US" id="prompt-input" class="!min-h-[50px] !h-fit !max-h-[250px] !overflow-y-auto" />
 
                     <!-- Send Button -->
                     <div class="w-fit h-[52px] grid items-center absolute bottom-0 right-4">
@@ -226,8 +217,7 @@ import { Icon } from '@iconify/vue';
 import profile_picture from '../../components/profile_picture.vue'
 import saveChat from '../../components/popups/saveChat.vue'
 import settings from '../../components/popups/settings.vue'
-import { VMarkdownView, VMarkdownEditor } from 'vue3-markdown'
-import 'vue3-markdown/dist/style.css'
+import { MdPreview, MdEditor  } from 'md-editor-v3';
 
 export default {
     name: "Dashboard",
@@ -252,7 +242,6 @@ export default {
         }
     },
     async mounted(){
-        this.adjust_input()
         // Event Listener to close the menu on clicks
         document.addEventListener("click", (e) => {
             if(this.account_menu && !e.target.classList.contains('account-menu')){
@@ -280,6 +269,7 @@ export default {
             }
         },
         '$route.params.chat': async function (value){
+            this.prompt = "";
             await this.getChat(value ? value : 'session')
         }
     },
@@ -292,12 +282,6 @@ export default {
 
             this.$gloading.stop();
             this.$router.push({name: "Login"})
-        },
-        adjust_input(){
-            let input = document.getElementsByClassName('vmd-body')[0].children[0];
-
-            input.style.height = '1px';
-            input.style.height = input.scrollHeight+'px';
         },
         scrollToBottom(){
             setTimeout(() => {
@@ -353,8 +337,6 @@ export default {
             this.scrollToBottom()
 
             this.prompt = "";
-            let input = document.getElementsByClassName('vmd-body')[0].children[0];
-            input.style.height = '50px';
             
             this.show_typing = true;
             const request_alert = {title: "GPT4 Unlimited"}
@@ -374,8 +356,8 @@ export default {
         profile_picture,
         saveChat,
         settings,
-        VMarkdownView,
-        VMarkdownEditor
+        MdPreview,
+        MdEditor
     }
 }
 
