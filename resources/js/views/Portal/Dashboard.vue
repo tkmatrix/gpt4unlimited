@@ -146,7 +146,7 @@
                         </form>
 
                         <!-- edit name button -->
-                        <button v-else @click="new_name = chat; edit_name = true;" class="w-fit h-fit flex items-center gap-2 text-custom-dark-blue1">
+                        <button v-else @click="new_name = chat; edit_name = true;" :disabled="show_typing" class="w-fit h-fit flex items-center gap-2 text-custom-dark-blue1">
                             <!-- chat name -->
                             <p class="text-[24px] whitespace-nowrap">{{ chat }}</p>
                             <Icon icon="jam:write" height="20px" class="text-custom-black" />
