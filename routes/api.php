@@ -53,5 +53,6 @@ Route::middleware('auth:sanctum')->prefix('/chat')->group(function() {
     Route::get('get/{id}', [ChatsController::class, 'get']);
     Route::post('save-session', [ChatsController::class, 'save_session_chat']);
 
+    Route::put('new-name/{chat_id}', [ChatsController::class, 'update_name']);
     Route::post('new-prompt/{chat_id}', [MessagesController::class, 'new_prompt']);
 });

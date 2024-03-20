@@ -116,4 +116,27 @@ class ChatsController extends Controller
         $chat->save();
         return response()->json(["message"=> "chat saved successfully.", "id"=> $chat->id], 200);
     }
+
+    /**
+     * Update the name of a chat
+     *
+     * @param Request $request
+     * @param string $chat_id
+     * @return object{message: string}
+     */
+    public function update_name(Request $request, string $chat_id){
+        $validate = ValidateHelper::check($request->all(), [
+            "name"=> "required|min:5"
+        ]);
+
+        if($validate->code == 400){
+            return $validate->response;
+        }
+
+        $chat = chats::find($chat_id);
+        $chat->name = $request->name;
+        $chat->save();
+
+        return response()->json(["message"=> "chat name updated successfully."], 200);
+    }
 }

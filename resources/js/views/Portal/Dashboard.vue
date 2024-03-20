@@ -123,9 +123,36 @@
         </div>
 
         <!-- Main Body -->
-        <div id="chat" class="w-full h-full grid md:justify-items-center pt-[100px] px-4 md:p-6 relative">
+        <div v-if="ready" id="chat" class="w-full h-full grid md:justify-items-center pt-[100px] px-4 md:p-6 relative">
+            <!-- desktop header - hidden on mobile -->
             <div class="w-full h-fit hidden md:grid items-center relative">
-                <p class="w-full text-left text-[24px] font-medium">GPT4 Unlimited <span class="opacity-50">v0.1 Beta</span></p>
+                <div class="w-fit h-fit flex items-center gap-6 text-[24px]">
+                    <p class="w-full text-left font-medium">GPT4 Unlimited <span class="opacity-50">v0.1 Beta</span></p>
+                    <p>-</p>
+
+                    <!-- chat name -->
+                    <div v-if="chat">
+                        <!-- update name form -->
+                        <form v-if="edit_name" @submit.prevent="updateName" class="w-fit h-fit flex items-center gap-6">
+                            <!-- new name -->
+                            <input v-model="new_name" type="text" style="height: 36px; width: 350px; font-size: 18px;">
+
+                            <div class="w-fit h-fit flex items-center gap-6">
+                                <!-- close button -->
+                                <button type="button" @click="edit_name = false; new_name = '';"><Icon icon="material-symbols-light:close" height="26px" class="text-custom-red" /></button>
+                                <!-- save button -->
+                                <button><Icon icon="codicon:check" height="26px" class="text-custom-green" /></button>
+                            </div>
+                        </form>
+
+                        <!-- edit name button -->
+                        <button v-else @click="new_name = chat; edit_name = true;" class="w-fit h-fit flex items-center gap-2 text-custom-dark-blue1">
+                            <!-- chat name -->
+                            <p class="text-[24px] whitespace-nowrap">{{ chat }}</p>
+                            <Icon icon="jam:write" height="20px" class="text-custom-black" />
+                        </button>
+                    </div>
+                </div>
 
                 <!-- Save Button -->
                 <button v-if="!this.$route.params.chat" @click="save_chat = true;" :disabled="show_typing" class="w-[32px] h-[32px] grid bg-white rounded-[4px] border-[1px] border-custom-black/10 right-0 absolute">
@@ -190,15 +217,17 @@
                     </div>
                 </div>
 
-                <!-- Prompt Input -->
-                <div class="w-full h-fit mt-8 relative">
-                    <MdEditor v-model="prompt" :disabled="show_typing" @keydown="handleKey" :preview="false" language="en-US" id="prompt-input" class="!min-h-[50px] !h-fit !max-h-[250px] !overflow-y-auto" />
+                <div class="w-full h-fit grid pb-8 md:pb-0">
+                    <!-- Prompt Input -->
+                    <div class="w-full h-fit mt-8 relative">
+                        <MdEditor v-model="prompt" :disabled="show_typing" @keydown="handleKey" :preview="false" language="en-US" id="prompt-input" class="!min-h-[50px] !h-fit !max-h-[250px] !overflow-y-auto" />
 
-                    <!-- Send Button -->
-                    <div class="w-fit h-[52px] grid items-center absolute bottom-0 right-4">
-                        <button @click="send" :disabled="!prompt" class="w-[30px] h-[30px] bg-custom-dark-blue2 disabled:opacity-50 rounded-[4px]">
-                            <Icon icon="mynaui:arrow-up" height="24px" class="m-auto text-white" />
-                        </button>
+                        <!-- Send Button -->
+                        <div class="w-fit h-[52px] grid items-center absolute bottom-0 right-4">
+                            <button @click="send" :disabled="!prompt" class="w-[30px] h-[30px] bg-custom-dark-blue2 disabled:opacity-50 rounded-[4px]">
+                                <Icon icon="mynaui:arrow-up" height="24px" class="m-auto text-white" />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -223,6 +252,7 @@ export default {
     name: "Dashboard",
     data(){
         return{
+            ready: false,
             session: this.$session.get(),
             
             view_chats: true,
@@ -230,7 +260,9 @@ export default {
             show_sidebar: true,
             account_menu: false,
 
-            // chats: [],
+            new_name: "",
+            edit_name: false,
+            // chat is the chat name
             chat: null,
             messages: [],
 
@@ -252,7 +284,8 @@ export default {
         const chat = this.$route.params.chat;
         await this.getChat(chat ? chat : 'session')
         
-        this.scrollToBottom()
+        this.ready = true;
+        this.scrollToBottom();
     },
     watch:{
         show_sidebar: function(value){
@@ -305,6 +338,23 @@ export default {
                 type: "success"
             })
         },
+        async updateName(){
+            this.$gloading.start();
+            const new_name = this.new_name;
+            this.edit_name = false;
+            this.new_name = "";
+
+            const res = await this.$apiHandler.put('chat/new-name/'+this.$route.params.chat, {name: new_name})
+            if(res.status == 200){
+                this.chat = new_name;
+
+                // update session to update sidebar chat name
+                await this.$session.valid();
+                this.session = this.$session.get();
+            }
+
+            this.$gloading.stop();
+        },
         async getChat(chat = 'session'){
             this.$gloading.start();
 
@@ -314,6 +364,10 @@ export default {
                 this.$router.replace({name: this.$route.name, params: {}});
             }else if(res.status == 200){
                 this.messages = res.data.chat.messages
+
+                if(chat != 'session'){
+                    this.chat = res.data.chat.name
+                }
                 this.scrollToBottom()
             }
 
