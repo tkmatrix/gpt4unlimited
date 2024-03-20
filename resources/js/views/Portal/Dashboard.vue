@@ -300,6 +300,10 @@ export default {
             }
         },
         '$route.params.chat': async function (value){
+            if(!value){
+                this.chat = null;
+            }
+
             this.prompt = "";
             await this.getChat(value ? value : 'session')
         }
