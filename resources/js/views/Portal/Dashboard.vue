@@ -33,7 +33,7 @@
             <div :class="show_sidebar ? 'w-[300px] p-4 md:p-6' : 'w-[0px] p-0'" class=" h-full bg-custom-light-gray relative overflow-hidden transition-all duration-1000 shadow-2xl">
                 <div class="w-full h-[80%] grid pt-[48px] sidebar-elm visible overflow-x-clip relative">
                     <!-- New Chat Button -->
-                    <button @click="$router.replace({name: $route.name, params: {}})" class="w-full h-fit grid items-center px-2 py-[4px] hover:bg-custom-hover-gray rounded-[8px] absolute top-0">
+                    <button @click="$router.replace({name: $route.name, params: {}})" :disabled="show_typing" class="w-full h-fit grid items-center px-2 py-[4px] hover:bg-custom-hover-gray rounded-[8px] absolute top-0">
                         <div class="w-fit h-fit flex items-center gap-2 truncate">
                             <div class="w-[28px] h-[28px] grid bg-white rounded-full border-[1px] border-custom-black/10">
                                 <Icon icon="simple-icons:openai" height="18px" class="m-auto text-custom-black" />
@@ -53,7 +53,7 @@
                             <p class="px-2 text-[14px] text-custom-gray opacity-70 pb-2">{{ group }}</p>
 
                             <!-- Chats -->
-                            <button v-for="(chat, index) in session.chats[group]" @click="$router.push({params: {chat: chat.id}})" :class="$route.params.chat == chat.id ? 'bg-custom-hover-gray' : 'hover:bg-custom-hover-gray'" class="w-full h-[36px] grid items-center px-2 py-[4px] rounded-[8px] relative pr-[36px] group">
+                            <button v-for="(chat, index) in session.chats[group]" @click="$router.push({params: {chat: chat.id}})" :disabled="show_typing" :class="$route.params.chat == chat.id ? 'bg-custom-hover-gray' : 'hover:bg-custom-hover-gray'" class="w-full h-[36px] grid items-center px-2 py-[4px] rounded-[8px] relative pr-[36px] group">
                                 <p class="text-[14px] text-left h-fit font-semibold truncate select-none">{{ chat.name }}</p>
 
                                 <!-- Menu Icon -->
@@ -128,7 +128,7 @@
                 <p class="w-full text-left text-[24px] font-medium">GPT4 Unlimited <span class="opacity-50">v0.1 Beta</span></p>
 
                 <!-- Save Button -->
-                <button v-if="!this.$route.params.chat" @click="save_chat = true;" class="w-[32px] h-[32px] grid bg-white rounded-[4px] border-[1px] border-custom-black/10 right-0 absolute">
+                <button v-if="!this.$route.params.chat" @click="save_chat = true;" :disabled="show_typing" class="w-[32px] h-[32px] grid bg-white rounded-[4px] border-[1px] border-custom-black/10 right-0 absolute">
                     <Icon icon="circum:save-down-2" height="24px" class="m-auto text-custom-dark-blue1" />
                 </button>
             </div>
@@ -192,7 +192,7 @@
 
                 <!-- Prompt Input -->
                 <div class="w-full h-fit mt-8 relative">
-                    <MdEditor v-model="prompt" @keydown="handleKey" :preview="false" language="en-US" id="prompt-input" class="!min-h-[50px] !h-fit !max-h-[250px] !overflow-y-auto" />
+                    <MdEditor v-model="prompt" :disabled="show_typing" @keydown="handleKey" :preview="false" language="en-US" id="prompt-input" class="!min-h-[50px] !h-fit !max-h-[250px] !overflow-y-auto" />
 
                     <!-- Send Button -->
                     <div class="w-fit h-[52px] grid items-center absolute bottom-0 right-4">
@@ -320,7 +320,10 @@ export default {
             this.$gloading.stop();
         },
         async send(){
+            // no loading because when showing typing is set to true all inputs and buttons are disabled
             // check to make sure a prompt is entered
+            this.show_typing = true;
+
             if(!this.prompt || !this.prompt.trim()){
                 this.$notification.add({
                     title: "Validation Error",
@@ -328,9 +331,9 @@ export default {
                     type: "warn"
                 });
                 
+                this.show_typing = false;
                 return;
             }
-            this.$gloading.start();
 
             const prompt = this.prompt;
             this.messages.push({role: 'user', content: prompt})
@@ -338,7 +341,6 @@ export default {
 
             this.prompt = "";
             
-            this.show_typing = true;
             const request_alert = {title: "GPT4 Unlimited"}
 
             const res = await this.$apiHandler.post('chat/new-prompt/'+(this.$route.params.chat ? this.$route.params.chat : 'session'), {prompt: prompt}, {}, request_alert)
@@ -347,8 +349,6 @@ export default {
                 this.messages.push(res.data.assistant_response)
                 this.scrollToBottom()
             }
-            
-            this.$gloading.stop();
         }
     },
     components: {
