@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Validator;
 class AuthController extends Controller
 {
     // Login session token validity time in minutes
-    public $token_valid_for = 30;
+    public $token_valid_for = 120;
     private $token_name = 'gpt4u';
 
     // Update laravel sanctum vendor file to extend the exipres at time ever time the token is successfully authenticated

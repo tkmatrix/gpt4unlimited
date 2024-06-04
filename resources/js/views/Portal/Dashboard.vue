@@ -218,7 +218,7 @@
                 <div class="w-full h-fit grid pb-8 md:pb-0">
                     <!-- Prompt Input -->
                     <div class="w-full h-fit mt-8 relative">
-                        <MdEditor v-model="prompt" :disabled="show_typing" @keydown="handleKey" :preview="false" language="en-US" id="prompt-input" class="!min-h-[50px] !h-fit !max-h-[250px] !overflow-y-auto" />
+                        <MdEditor v-model="prompt" :disabled="show_typing" @keydown="handleKey" :preview="false" autoDetectCode language="en-US" id="prompt-input" class="!min-h-[50px] !h-fit !max-h-[250px] !overflow-y-auto" />
 
                         <!-- Send Button -->
                         <div class="w-fit h-[52px] grid items-center absolute bottom-0 right-4">
